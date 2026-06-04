@@ -4,10 +4,10 @@ site_description: 个人知识管理系统
 site_author: Administrator
 site_url: ""
 
-# 仓库配置（换成你自己的 Git 仓库地址后取消注释）
-# repo_url: https://github.com/your-username/your-repo
-# repo_name: your-repo
-# edit_uri: edit/main/docs/
+# 仓库配置
+repo_url: https://github.com/caishen6668-bit/knowledge-base
+repo_name: knowledge-base
+edit_uri: edit/main/docs/
 
 theme:
   name: material
