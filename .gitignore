@@ -1,0 +1,18 @@
+# Python 虚拟环境
+.venv/
+
+# MkDocs 构建输出
+site/
+
+# IDE 配置
+.vscode/
+.idea/
+
+# 系统文件
+Thumbs.db
+.DS_Store
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class

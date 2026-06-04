@@ -1,0 +1,104 @@
+# 知识库配置
+site_name: 我的知识库
+site_description: 个人知识管理系统
+site_author: Administrator
+site_url: ""
+
+# 仓库配置（换成你自己的 Git 仓库地址后取消注释）
+# repo_url: https://github.com/your-username/your-repo
+# repo_name: your-repo
+# edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.tabs          # 顶部导航标签
+    - navigation.tabs.sticky   # 标签固定
+    - navigation.sections      # 导航分区
+    - navigation.expand        # 默认展开所有导航
+    - navigation.path          # 面包屑导航
+    - navigation.top           # 回到顶部按钮
+    - navigation.indexes       # 索引页面作为章节概览
+    - toc.integrate            # 目录集成到侧边栏
+    - search.suggest           # 搜索建议
+    - search.highlight         # 搜索高亮
+    - search.share             # 搜索分享
+    - content.code.annotate    # 代码注解
+    - content.code.copy        # 代码复制按钮
+    - content.tabs.link        # 内容标签页链接
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: 切换到暗色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: 切换到亮色模式
+
+  # 字体设置
+  font:
+    text: Noto Sans SC
+    code: JetBrains Mono
+
+# 插件配置
+plugins:
+  - search
+  - tags:
+      tags: true               # 启用标签
+
+# Markdown 扩展
+markdown_extensions:
+  - admonition                 # 提示块
+  - pymdownx.details           # 可折叠提示块
+  - pymdownx.superfences       # 代码块增强
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite      # 行内代码高亮
+  - pymdownx.tabbed:
+      alternate_style: true    # 标签页
+  - pymdownx.tasklist:
+      custom_checkbox: true    # 任务列表
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.keys              # 键盘按键显示
+  - pymdownx.mark              # 高亮标记
+  - pymdownx.critic            # 修订标记
+  - pymdownx.caret             # 上标
+  - pymdownx.tilde             # 下标
+  - pymdownx.smartsymbols      # 智能符号
+  - pymdownx.arithmatex:       # 数学公式
+      generic: true
+  - footnotes                  # 脚注
+  - attr_list                  # 属性列表
+  - md_in_html                 # HTML 中的 Markdown
+  - def_list                   # 定义列表
+  - tables                     # 表格
+
+# 导航结构
+nav:
+  - 🏠 首页: index.md
+  - 📚 学习笔记:
+    - 概览: guide/index.md
+    - 快速开始: guide/getting-started.md
+    - 最佳实践: guide/best-practices.md
+  - 💻 技术文档:
+    - 概览: dev/index.md
+    - 环境搭建: dev/setup.md
+    - 常用命令: dev/commands.md
+  - 📖 参考资料:
+    - 概览: reference/index.md
+    - 实用工具: reference/tools.md
+    - 学习资源: reference/resources.md
+  - 🏷️ 标签: tags.md
+
+# 版权信息
+copyright: Copyright &copy; 2024 个人知识库
