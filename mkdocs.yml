@@ -90,10 +90,38 @@ nav:
     - 概览: guide/index.md
     - 快速开始: guide/getting-started.md
     - 最佳实践: guide/best-practices.md
+  - 💼 工作文档:
+    - 概览: work/index.md
+    - 📊 催收业务:
+      - 概览: work/collection/index.md
+      - 催收数据分析: work/collection/analysis-0605-0606.md
+      - 团队激励方案: work/collection/incentive-plan.md
+      - 个人评级说明: work/collection/rating-system.md
+      - 催记规范要求: work/collection/collection-records.md
+    - 👤 人事培训:
+      - 概览: work/hr/index.md
+      - 入职引导: work/hr/onboarding-guide.md
+    - 📈 市场研究:
+      - 概览: work/research/index.md
+      - 现金贷市场报告: work/research/cash-loan-market-report.md
   - 💻 技术文档:
     - 概览: dev/index.md
     - 环境搭建: dev/setup.md
     - 常用命令: dev/commands.md
+    - 🐍 评分系统代码:
+      - 概览: dev/scripts/index.md
+      - 业绩分: dev/scripts/业绩分.md
+      - 出勤分: dev/scripts/出勤分.md
+      - 入职分: dev/scripts/入职分.md
+      - 业绩+出勤: dev/scripts/业绩+出勤.md
+      - 员工最终评分: dev/scripts/员工最终评分.md
+      - 组员等级排名: dev/scripts/组员等级排名.md
+      - 周度人员排名: dev/scripts/周度人员排名.md
+      - 周度日度生成: dev/scripts/周度日度生成.md
+      - 个人激励原: dev/scripts/个人激励原.md
+      - 个人激励提200: dev/scripts/个人激励提200.md
+      - xby每日: dev/scripts/xby每日.md
+      - untitled: dev/scripts/untitled.md
   - 📖 参考资料:
     - 概览: reference/index.md
     - 实用工具: reference/tools.md

@@ -1,0 +1,91 @@
+import pandas as pd
+
+# 读取文件
+file_path = r"C:\Users\Administrator\Desktop\17-23数.xlsx"
+df = pd.read_excel(file_path)
+
+# -------------------------
+# 统一列名，去掉空格
+# -------------------------
+df.columns = df.columns.str.strip()
+print("列名检查：", df.columns.tolist())  # 可查看实际列名
+
+# -------------------------
+# 过滤订单催回率 >= 100%
+# -------------------------
+df["订单催回率"] = pd.to_numeric(df["订单催回率"], errors="coerce")
+df = df[df["订单催回率"] < 1]
+
+# -------------------------
+# 转换达成率为数值
+# -------------------------
+df["达成率"] = pd.to_numeric(df["达成率"], errors="coerce")
+
+# -------------------------
+# 去重：按员工 + 日期（每人每天只算一次）
+# -------------------------
+df_unique = df.drop_duplicates(subset=["催员姓名", "statis_date(day)"])
+
+# -------------------------
+# 员工整周统计
+# -------------------------
+employee_grouped = (
+    df_unique.groupby(["催员姓名", "小组名称"])
+    .agg(
+        总周出勤=("statis_date(day)", "count"),  # 每天算一次
+        平均达成率=("达成率", "mean")            # 每天平均
+    )
+    .reset_index()
+)
+
+# -------------------------
+# 列重命名和在职状态
+# -------------------------
+employee_grouped.rename(columns={"催员姓名": "员工名称"}, inplace=True)
+employee_grouped["在职状态"] = "在职"
+
+# -------------------------
+# 平均达成率转百分比（带 % 符号）
+# -------------------------
+employee_grouped["平均达成率"] = (employee_grouped["平均达成率"] * 100).round(2).astype(str) + "%"
+
+# -------------------------
+# 奖金计算函数
+# -------------------------
+def calc_bonus(row):
+    # 去掉 % 转回数字计算
+    avg_rate = float(row["平均达成率"].replace("%",""))
+    if row["总周出勤"] < 6:
+        return 0
+    elif avg_rate >= 140:
+        return 300
+    elif avg_rate >= 130:
+        return 200
+    elif avg_rate >= 120:
+        return 120
+    elif avg_rate >= 110:
+        return 60
+    else:
+        return 0
+
+employee_grouped["奖金"] = employee_grouped.apply(calc_bonus, axis=1)
+
+# -------------------------
+# 调整列顺序
+# -------------------------
+employee_grouped = employee_grouped[[
+    "员工名称",
+    "在职状态",
+    "小组名称",
+    "总周出勤",
+    "平均达成率",
+    "奖金"
+]]
+
+# -------------------------
+# 写入 Excel
+# -------------------------
+output_path = r"C:\Users\Administrator\Desktop\排名分析结果_员工汇总_百分比.xlsx"
+employee_grouped.to_excel(output_path, index=False)
+
+print("✅ 统计结果已输出到：", output_path)

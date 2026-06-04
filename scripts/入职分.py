@@ -1,0 +1,49 @@
+import pandas as pd
+import os
+
+desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+
+# === 1. 读取花名册 ===
+roster_file = os.path.join(desktop, "花名册.xlsx")
+roster = pd.read_excel(roster_file)
+
+print("花名册表头：", list(roster.columns))
+
+# === 2. 自动识别“姓名列”和“在职时长列” ===
+name_col = None
+days_col = None
+
+for c in roster.columns:
+    sc = str(c).strip()
+    if "姓名" in sc:
+        name_col = c
+    if "在职时长" in sc:
+        days_col = c
+
+print("识别到的姓名列：", name_col)
+print("识别到的在职时长列：", days_col)
+
+if name_col is None or days_col is None:
+    raise KeyError(f"未能自动识别姓名或在职时长列，请检查花名册表头：{list(roster.columns)}")
+
+# === 3. 标准化列名 ===
+roster = roster.rename(columns={name_col: 'agent', days_col: 'work_days'})
+
+# 在职时长转成整数天数
+roster['work_days'] = pd.to_numeric(roster['work_days'], errors='coerce').fillna(0).clip(lower=0).astype(int)
+
+# === 4. 计算在职月数和入职分 ===
+# 在职月数 = 在职天数 // 30
+roster['入职月数'] = (roster['work_days'] // 30).astype(int)
+
+# 入职分 = min(10, 入职月数 + 1)
+roster['入职分'] = (roster['入职月数'] + 1).clip(upper=10)
+
+# === 5. 输出入职得分表 ===
+entry_result = roster[['agent', 'work_days', '入职月数', '入职分']]
+
+out_file = os.path.join(desktop, "入职得分.xlsx")
+entry_result.to_excel(out_file, index=False)
+
+print("✅ 入职得分已计算完成，保存到：", out_file)
+print(entry_result.head(20))
