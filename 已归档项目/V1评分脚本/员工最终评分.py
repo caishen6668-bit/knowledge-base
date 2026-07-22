@@ -1,0 +1,483 @@
+import pandas as pd
+import os
+
+# =======================
+# 0. 基本配置：文件名
+# =======================
+desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+cycle_label = "6.16-6.30"
+
+curr_perf_file  = os.path.join(desktop, "6.16-6.30业绩.xlsx")
+prev1_perf_file = os.path.join(desktop, "6.1-6.15业绩.xlsx")
+prev2_perf_file = os.path.join(desktop, "5.16-5.31业绩.xlsx")
+
+att_file    = os.path.join(desktop, "6.16-6.30出勤.xlsx")
+comp_file   = os.path.join(desktop, "6.16-6.30合规.xlsx")
+roster_file = os.path.join(desktop, "花名册.xlsx")
+
+# =======================
+# 1. 业绩分规则
+# =======================
+def perf_score(rate):
+
+    pct = rate * 100
+
+    if pct <= 60:
+        return 0
+
+    elif pct < 70:
+        return (pct - 60) * 2
+
+    elif pct < 80:
+        return 20 + (pct - 70) * 1
+
+    elif pct < 85:
+        return 30 + (pct - 80) * 1
+
+    elif pct < 90:
+        return 35 + (pct - 85) * 1
+
+    elif pct < 95:
+        return 40 + (pct - 90) * 1
+
+    elif pct < 100:
+        return 45 + (pct - 95) * 1
+
+    elif pct < 110:
+        return 50 + (pct - 100) * 1
+
+    elif pct < 120:
+        return 60 + (pct - 110) * 1
+
+    elif pct < 130:
+        return 70 + (pct - 120) * 1
+
+    else:
+        return 80
+
+# =======================
+# 2. 单周期业绩
+# =======================
+def compute_period_perf(file_path, label_for_log=None):
+
+    if label_for_log is None:
+        label_for_log = file_path
+
+    print(f"=== 计算周期业绩：{label_for_log} ===")
+
+    df = pd.read_excel(file_path)
+
+    df = df.rename(columns={
+        '催员姓名': 'agent',
+        '催员账号': 'agent_id',
+        'statis_date(day)': 'date',
+        '逾期阶段': 'stage',
+        '达成率': 'ach_rate',
+        '订单催回率': 'order_rate',
+        '客群_喜象': 'custom_group'
+    })
+
+    s_ach = df['ach_rate'].astype(str).str.strip().str.replace('%','',regex=False)
+    df['ach_rate'] = pd.to_numeric(s_ach, errors='coerce')
+
+    df['stage'] = df['stage'].astype(str).str.strip().str.upper()
+
+    mask_150 = df['stage'].isin(['D0','D1'])
+
+    df.loc[mask_150,'ach_rate'] = df.loc[mask_150,'ach_rate'].clip(upper=1.5)
+    df.loc[~mask_150,'ach_rate'] = df.loc[~mask_150,'ach_rate'].clip(upper=2.0)
+
+    if 'order_rate' in df.columns:
+        s_order = df['order_rate'].astype(str).str.strip().str.replace('%','',regex=False)
+        df['order_rate'] = pd.to_numeric(s_order, errors='coerce')
+        df = df[(df['order_rate'].isna()) | (df['order_rate'] < 1)]
+
+    df = df.dropna(subset=['agent','ach_rate'])
+
+    df['agent'] = df['agent'].astype(str).str.strip().str.lower()
+
+    def remove_min_and_mean(group):
+        if group.shape[0] == 1:
+            return group['ach_rate'].iloc[0]
+        else:
+            return group['ach_rate'].drop(group['ach_rate'].idxmin()).mean()
+
+    agg = df.groupby(['agent','agent_id']).apply(remove_min_and_mean).reset_index()
+    agg = agg.rename(columns={0:'达成率'})
+
+    agg['业绩分_本期'] = agg['达成率'].apply(perf_score)
+
+    if 'date' in df.columns:
+        df_sorted = df.sort_values(['agent','date'],ascending=[True,False])
+    else:
+        df_sorted = df.copy()
+
+    curr_stage_group = df_sorted.groupby('agent').agg({
+        'stage':'first',
+        'custom_group':'first'
+    }).reset_index()
+
+    curr_stage_group['当前阶段'] = curr_stage_group['stage'].astype(str) + '-' + curr_stage_group['custom_group'].astype(str)
+
+    agg = agg.merge(curr_stage_group[['agent','当前阶段']], on='agent', how='left')
+
+    return agg
+
+# =======================
+# 3. 三周期业绩
+# =======================
+curr_perf = compute_period_perf(curr_perf_file,"当前周期")
+
+prev1_perf = compute_period_perf(prev1_perf_file,"上一周期") if os.path.exists(prev1_perf_file) else pd.DataFrame(columns=['agent','agent_id','达成率','业绩分_本期','当前阶段'])
+prev2_perf = compute_period_perf(prev2_perf_file,"上上周期") if os.path.exists(prev2_perf_file) else pd.DataFrame(columns=['agent','agent_id','达成率','业绩分_本期','当前阶段'])
+
+curr_perf['agent'] = curr_perf['agent'].astype(str).str.strip().str.lower()
+prev1_perf['agent'] = prev1_perf['agent'].astype(str).str.strip().str.lower()
+prev2_perf['agent'] = prev2_perf['agent'].astype(str).str.strip().str.lower()
+
+curr = curr_perf.rename(columns={
+'达成率':'达成率_本期',
+'业绩分_本期':'业绩分_本期',
+'当前阶段':'当前阶段'
+})
+
+prev1 = prev1_perf.rename(columns={
+'达成率':'达成率_近1期',
+'业绩分_本期':'业绩分_近1期'
+})[['agent','达成率_近1期','业绩分_近1期']]
+
+prev2 = prev2_perf.rename(columns={
+'达成率':'达成率_近2期',
+'业绩分_本期':'业绩分_近2期'
+})[['agent','达成率_近2期','业绩分_近2期']]
+
+perf_all = curr.merge(prev1,on='agent',how='left').merge(prev2,on='agent',how='left')
+
+for col in ['达成率_本期','达成率_近1期','达成率_近2期']:
+    if col in perf_all.columns:
+        perf_all[col] = (pd.to_numeric(perf_all[col],errors='coerce')*100).round(2).astype(str)+'%'
+
+# =======================
+# 4. 出勤（新增：年假不扣分）
+# =======================
+print("=== 处理出勤表 ===")
+
+att = pd.read_excel(att_file)
+
+att = att.rename(columns={
+'员工姓名':'agent',
+'排班日期(day)':'date',
+'排班状态':'status'
+})
+
+# 缺勤
+att['is_absent'] = (att['status']=='缺勤').astype(int)
+
+# 出勤（上班 + 年假）
+att['is_workday'] = att['status'].isin(['上班','年假']).astype(int)
+
+# 请假扣分
+att['is_leave'] = (att['status']=='请假').astype(int)
+
+att_agg = att.groupby('agent').agg(
+缺勤次数=('is_absent','sum'),
+出勤天数=('is_workday','sum'),
+请假次数=('is_leave','sum')
+).reset_index()
+
+def calc_att_score(row):
+
+    absent = row['缺勤次数']
+    leave = row['请假次数']
+
+    # 基础20分
+    score = 20 - absent*10 - leave*5
+
+    # 只限制上限，不限制下限
+    score = min(score, 20)
+
+    return score
+
+att_agg['出勤分'] = att_agg.apply(calc_att_score,axis=1)
+
+att_agg['agent'] = att_agg['agent'].astype(str).str.strip().str.lower()
+
+# =======================
+# 5. 合并业绩 + 出勤
+# =======================
+df_pe = perf_all.merge(att_agg,on='agent',how='left')
+
+for col in ['缺勤次数','出勤天数','请假次数']:
+    if col in df_pe.columns:
+        df_pe[col]=df_pe[col].fillna(0).astype(int)
+
+df_pe['出勤分']=df_pe['出勤分'].fillna(0)
+
+# =======================
+# 6. 花名册
+# =======================
+roster = pd.read_excel(roster_file)
+
+name_col=None
+days_col=None
+status_col=None
+
+for c in roster.columns:
+
+    sc=str(c).strip()
+
+    if "姓名" in sc:
+        name_col=c
+
+    if "在职时长" in sc:
+        days_col=c
+
+    if "是否在职" in sc:
+        status_col=c
+
+rename_map={name_col:'agent_roster',days_col:'work_days'}
+
+if status_col is not None:
+    rename_map[status_col]='是否在职'
+
+roster=roster.rename(columns=rename_map)
+
+roster['work_days']=pd.to_numeric(roster['work_days'],errors='coerce').fillna(0).astype(int)
+
+roster['入职月数']=(roster['work_days']//30).astype(int)
+
+months=roster['入职月数']
+
+roster['入职分']=1+(months-1).clip(lower=0)+(months-6).clip(lower=0)*0.5
+
+entry_cols=['agent_roster','work_days','入职月数','入职分']
+
+if '是否在职' in roster.columns:
+    entry_cols.append('是否在职')
+
+entry_result=roster[entry_cols]
+
+entry_result['agent_key']=entry_result['agent_roster'].astype(str).str.strip().str.lower()
+
+# =======================
+# 7. 合并入职分
+# =======================
+df_pe['agent_key']=df_pe['agent'].astype(str).str.strip().str.lower()
+
+merge_cols=['agent_key','入职分','agent_roster']
+
+if '是否在职' in entry_result.columns:
+    merge_cols.append('是否在职')
+
+df_all=df_pe.merge(entry_result[merge_cols],on='agent_key',how='left')
+
+df_all['agent']=df_all['agent_roster'].fillna(df_all['agent'])
+
+df_all.drop(columns=['agent_key','agent_roster'],inplace=True)
+
+df_all['入职分']=df_all['入职分'].fillna(0)
+
+if '是否在职' in df_all.columns:
+    df_all['是否在职']=df_all['是否在职'].fillna("离职/未知")
+else:
+    df_all['是否在职']="离职/未知"
+
+# =======================
+# 8. 合规
+# =======================
+viol=pd.read_excel(comp_file)
+
+viol=viol.rename(columns={
+'催收组员':'agent',
+'违规等级':'level'
+})
+
+def calc_penalty(txt):
+
+    s=str(txt)
+
+    if '一般' in s: return 1
+    if '中度' in s: return 5
+    if '严重' in s: return 10
+
+    return 0
+
+if viol.shape[0]==0:
+
+    comp_agg=pd.DataFrame(columns=['agent','合规分'])
+
+else:
+
+    viol['agent']=viol['agent'].astype(str).str.strip().str.lower()
+
+    viol['扣分']=viol['level'].apply(calc_penalty)
+
+    comp_agg=viol.groupby('agent')['扣分'].sum().reset_index()
+
+    comp_agg=comp_agg.rename(columns={'扣分':'合规扣分'})
+
+    comp_agg['合规分']=(10-comp_agg['合规扣分']).clip(lower=0)
+
+df_final=df_all.merge(comp_agg[['agent','合规分']],on='agent',how='left')
+
+df_final['合规分']=df_final['合规分'].fillna(10)
+
+# =======================
+# 9. 三期加权业绩 + 综合评分
+# =======================
+mask_le6=df_final['出勤天数']<=6
+
+for col in ['业绩分_本期','业绩分_近1期','业绩分_近2期']:
+
+    if col in df_final.columns:
+
+        df_final[col]=pd.to_numeric(df_final[col],errors='coerce')
+
+        df_final.loc[mask_le6 & df_final[col].notna(),col]=df_final.loc[mask_le6 & df_final[col].notna(),col].clip(upper=45)
+
+        df_final.loc[mask_le6 & df_final[col].isna(),col]=45
+
+w0,w1,w2=0.5,0.3,0.2
+
+def weighted_score_row(row):
+
+    scores,weights=[],[]
+
+    if pd.notna(row.get('业绩分_本期')):
+        scores.append(row['业绩分_本期']);weights.append(w0)
+
+    if pd.notna(row.get('业绩分_近1期')):
+        scores.append(row['业绩分_近1期']);weights.append(w1)
+
+    if pd.notna(row.get('业绩分_近2期')):
+        scores.append(row['业绩分_近2期']);weights.append(w2)
+
+    if not scores:
+        return 0.0
+
+    w_sum=sum(weights)
+
+    return sum(s*w for s,w in zip(scores,weights))/w_sum
+
+df_final['业绩分_三期加权']=df_final.apply(weighted_score_row,axis=1)
+
+df_final['综合评分']=(
+
+df_final['业绩分_三期加权']
++df_final['出勤分']
++df_final['入职分']
+
+)
+
+# =======================
+# 10. 等级 & 奖金系数
+# =======================
+def level_and_coef_for_row(row):
+
+    if row['是否在职']!='在职':return '',0.0
+
+    score=row['综合评分']
+
+    if score>=105:return 'SSS',1.30
+    elif score>=100:return 'SS',1.25
+    elif score>=95:return 'S',1.20
+    elif score>=90:return 'AA',1.15
+    elif score>=85:return 'A',1.10
+    elif score>=65:return 'B',1.00
+    elif score>=55:return 'C',1.00
+    else:return 'D',1.00
+
+lv=df_final.apply(level_and_coef_for_row,axis=1)
+
+df_final['最终等级']=lv.apply(lambda x:x[0])
+
+df_final['奖金系数']=lv.apply(lambda x:x[1])
+
+# 排名
+df_active=df_final[df_final['是否在职']=='在职'].copy()
+
+df_active=df_active.sort_values('综合评分',ascending=False).reset_index(drop=True)
+
+df_active['最终名次']=df_active.index+1
+
+df_final=df_final.merge(df_active[['agent','最终名次']],on='agent',how='left')
+
+df_final['在职标记']=(df_final['是否在职']=='在职').astype(int)
+
+df_final=df_final.sort_values(by=['在职标记','最终名次'],ascending=[False,True]).reset_index(drop=True)
+
+df_final=df_final.rename(columns={
+'agent':'催员姓名',
+'agent_id':'组员账号'
+})
+
+# =======================
+# 11. 输出结果（中文版+墨西哥西班牙语版）
+# =======================
+
+final_out_zh = os.path.join(desktop, f"最终评级结果_{cycle_label}_中文版.xlsx")
+final_out_mx = os.path.join(desktop, f"最终评级结果_{cycle_label}_Mexico.xlsx")
+
+cols_zh = [
+    '催员姓名',
+    '组员账号',
+    '当前阶段',
+    '是否在职',
+    '达成率_本期',
+    '达成率_近1期',
+    '达成率_近2期',
+    '业绩分_本期',
+    '业绩分_近1期',
+    '业绩分_近2期',
+    '业绩分_三期加权',
+    '缺勤次数',
+    '请假次数',
+    '出勤天数',
+    '出勤分',
+    '入职分',
+    '综合评分',
+    '最终等级',
+    '奖金系数',
+    '最终名次'
+]
+
+cols_zh = [c for c in cols_zh if c in df_final.columns]
+
+# 中文版
+df_final[cols_zh].to_excel(final_out_zh, index=False)
+
+# 西班牙语字段映射
+zh_to_mx = {
+    '催员姓名': 'Nombre del agente',
+    '组员账号': 'ID del equipo',
+    '当前阶段': 'Etapa actual',
+    '是否在职': 'Estado laboral',
+    '达成率_本期': 'Tasa de logro actual',
+    '达成率_近1期': 'Tasa de logro ciclo anterior',
+    '达成率_近2期': 'Tasa de logro dos ciclos',
+    '业绩分_本期': 'Puntaje actual',
+    '业绩分_近1期': 'Puntaje ciclo anterior',
+    '业绩分_近2期': 'Puntaje dos ciclos',
+    '业绩分_三期加权': 'Puntaje ponderado',
+    '缺勤次数': 'Faltas',
+    '请假次数': 'Permisos',
+    '出勤天数': 'Días trabajados',
+    '出勤分': 'Puntaje de asistencia',
+    '入职分': 'Puntaje de antigüedad',
+    '合规分': 'Puntaje de cumplimiento',
+    '综合评分': 'Puntaje total',
+    '最终等级': 'Nivel final',
+    '奖金系数': 'Coeficiente de bono',
+    '最终名次': 'Ranking final'
+}
+
+cols_mx = [zh_to_mx.get(c, c) for c in cols_zh]
+
+df_final_mx = df_final[cols_zh].copy()
+df_final_mx.columns = cols_mx
+
+df_final_mx.to_excel(final_out_mx, index=False)
+
+print("✅ 已输出两个评级结果：")
+print(final_out_zh)
+print(final_out_mx)

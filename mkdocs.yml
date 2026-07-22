@@ -1,32 +1,33 @@
 # 知识库配置
 site_name: 我的知识库
-site_description: 个人知识管理系统
+site_description: 个人开发知识库
 site_author: Administrator
 site_url: ""
+docs_dir: 文档
 
 # 仓库配置
 repo_url: https://github.com/caishen6668-bit/knowledge-base
 repo_name: knowledge-base
-edit_uri: edit/main/docs/
+edit_uri: edit/main/文档/
 
 theme:
   name: material
   language: zh
   features:
-    - navigation.tabs          # 顶部导航标签
-    - navigation.tabs.sticky   # 标签固定
-    - navigation.sections      # 导航分区
-    - navigation.expand        # 默认展开所有导航
-    - navigation.path          # 面包屑导航
-    - navigation.top           # 回到顶部按钮
-    - navigation.indexes       # 索引页面作为章节概览
-    - toc.integrate            # 目录集成到侧边栏
-    - search.suggest           # 搜索建议
-    - search.highlight         # 搜索高亮
-    - search.share             # 搜索分享
-    - content.code.annotate    # 代码注解
-    - content.code.copy        # 代码复制按钮
-    - content.tabs.link        # 内容标签页链接
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - navigation.indexes
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.annotate
+    - content.code.copy
+    - content.tabs.link
   palette:
     - scheme: default
       primary: indigo
@@ -40,93 +41,87 @@ theme:
       toggle:
         icon: material/weather-sunny
         name: 切换到亮色模式
-
-  # 字体设置
   font:
     text: Noto Sans SC
     code: JetBrains Mono
 
-# 插件配置
 plugins:
   - search
   - tags:
-      tags: true               # 启用标签
+      tags: true
 
-# Markdown 扩展
 markdown_extensions:
-  - admonition                 # 提示块
-  - pymdownx.details           # 可折叠提示块
-  - pymdownx.superfences       # 代码块增强
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
-  - pymdownx.inlinehilite      # 行内代码高亮
+  - pymdownx.inlinehilite
   - pymdownx.tabbed:
-      alternate_style: true    # 标签页
+      alternate_style: true
   - pymdownx.tasklist:
-      custom_checkbox: true    # 任务列表
+      custom_checkbox: true
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.keys              # 键盘按键显示
-  - pymdownx.mark              # 高亮标记
-  - pymdownx.critic            # 修订标记
-  - pymdownx.caret             # 上标
-  - pymdownx.tilde             # 下标
-  - pymdownx.smartsymbols      # 智能符号
-  - pymdownx.arithmatex:       # 数学公式
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.tilde
+  - pymdownx.smartsymbols
+  - pymdownx.arithmatex:
       generic: true
-  - footnotes                  # 脚注
-  - attr_list                  # 属性列表
-  - md_in_html                 # HTML 中的 Markdown
-  - def_list                   # 定义列表
-  - tables                     # 表格
+  - footnotes
+  - attr_list
+  - md_in_html
+  - def_list
+  - tables
 
-# 导航结构
 nav:
   - 🏠 首页: index.md
   - 📚 学习笔记:
-    - 概览: guide/index.md
-    - 快速开始: guide/getting-started.md
-    - 最佳实践: guide/best-practices.md
+    - 概览: 学习笔记/index.md
+    - 快速开始: 学习笔记/getting-started.md
+    - 最佳实践: 学习笔记/best-practices.md
   - 💼 工作文档:
-    - 概览: work/index.md
+    - 概览: 工作文档/index.md
     - 📊 催收业务:
-      - 概览: work/collection/index.md
-      - 催收数据分析: work/collection/analysis-0605-0606.md
-      - 团队激励方案: work/collection/incentive-plan.md
-      - 个人评级说明: work/collection/rating-system.md
-      - 催记规范要求: work/collection/collection-records.md
+      - 概览: 工作文档/催收业务/index.md
+      - 催收数据分析: 工作文档/催收业务/analysis-0605-0606.md
+      - 团队激励方案: 工作文档/催收业务/incentive-plan.md
+      - 个人评级说明: 工作文档/催收业务/rating-system.md
+      - 催记规范要求: 工作文档/催收业务/collection-records.md
     - 👤 人事培训:
-      - 概览: work/hr/index.md
-      - 入职引导: work/hr/onboarding-guide.md
+      - 概览: 工作文档/人事培训/index.md
+      - 入职引导: 工作文档/人事培训/onboarding-guide.md
     - 📈 市场研究:
-      - 概览: work/research/index.md
-      - 现金贷市场报告: work/research/cash-loan-market-report.md
+      - 概览: 工作文档/市场研究/index.md
+      - 现金贷市场报告: 工作文档/市场研究/cash-loan-market-report.md
   - 💻 技术文档:
-    - 概览: dev/index.md
-    - 环境搭建: dev/setup.md
-    - 常用命令: dev/commands.md
-    - 🐍 评分系统代码:
-      - 概览: dev/scripts/index.md
-      - 业绩分: dev/scripts/业绩分.md
-      - 出勤分: dev/scripts/出勤分.md
-      - 入职分: dev/scripts/入职分.md
-      - 业绩+出勤: dev/scripts/业绩+出勤.md
-      - 员工最终评分: dev/scripts/员工最终评分.md
-      - 组员等级排名: dev/scripts/组员等级排名.md
-      - 周度人员排名: dev/scripts/周度人员排名.md
-      - 周度日度生成: dev/scripts/周度日度生成.md
-      - 个人激励原: dev/scripts/个人激励原.md
-      - 个人激励提200: dev/scripts/个人激励提200.md
-      - xby每日: dev/scripts/xby每日.md
-      - untitled: dev/scripts/untitled.md
+    - 概览: 技术文档/index.md
+    - 环境搭建: 技术文档/setup.md
+    - 常用命令: 技术文档/commands.md
+    - 🐍 评分脚本说明:
+      - 概览: 技术文档/评分脚本说明/index.md
+      - 业绩分: 技术文档/评分脚本说明/业绩分.md
+      - 出勤分: 技术文档/评分脚本说明/出勤分.md
+      - 入职分: 技术文档/评分脚本说明/入职分.md
+      - 业绩+出勤: 技术文档/评分脚本说明/业绩+出勤.md
+      - 员工最终评分: 技术文档/评分脚本说明/员工最终评分.md
+      - 组员等级排名: 技术文档/评分脚本说明/组员等级排名.md
+      - 周度人员排名: 技术文档/评分脚本说明/周度人员排名.md
+      - 周度日度生成: 技术文档/评分脚本说明/周度日度生成.md
+      - 个人激励原: 技术文档/评分脚本说明/个人激励原.md
+      - 个人激励提200: 技术文档/评分脚本说明/个人激励提200.md
+      - xby每日: 技术文档/评分脚本说明/xby每日.md
+      - untitled: 技术文档/评分脚本说明/untitled.md
   - 📖 参考资料:
-    - 概览: reference/index.md
-    - 实用工具: reference/tools.md
-    - 学习资源: reference/resources.md
+    - 概览: 参考资料/index.md
+    - 实用工具: 参考资料/tools.md
+    - 学习资源: 参考资料/resources.md
   - 🏷️ 标签: tags.md
 
-# 版权信息
 copyright: Copyright &copy; 2024 个人知识库

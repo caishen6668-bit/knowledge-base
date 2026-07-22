@@ -1,0 +1,5 @@
+# 首逾智能预警系统 v1.0.0 — Python 依赖
+# 安装: pip install -r requirements.txt
+
+requests>=2.28.0
+openpyxl>=3.1.0
